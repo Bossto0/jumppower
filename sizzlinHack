@@ -983,7 +983,6 @@ end,{default = kVars.boolRebirthXPMultiplier})
 function fRebirthXPMultiplier()
     spawn(function()
         while kVars.boolRebirthXPMultiplier do
-            wait(1)
             kVars.rs.RemoteEvent:FireServer("Purchase Rebirth Shop", "XP")
         end
     end)
