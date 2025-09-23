@@ -488,7 +488,7 @@ end,{default = kVars.boolBestFork})
 function fBestFork()
     spawn(function()
         while kVars.boolBestFork do
-            wait(1)
+            wait(0.1)
             pcall(function()
                 local pCoins, Gems = kVars.rs.RemoteFunction:InvokeServer("Get Currency")
                 local forkInv, curForkId = kVars.rs.RemoteFunction:InvokeServer("Get Fork Data")
@@ -668,7 +668,7 @@ end,{default = kVars.boolTpAreaRebirth})
 function fTpAreaRebirth()
     spawn(function()
         while kVars.boolTpAreaRebirth do
-            wait(1)
+            wait(0.1)
             if kVars.boolTpAreaRebirth == false then break end
             local list = {
                 [1] = (kVars.hrp.Position - Vector3.new(-11, 6, 58)).magnitude,
