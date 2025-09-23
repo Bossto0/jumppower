@@ -1,3 +1,9 @@
+--[[
+Game : https://www.roblox.com/games/4572547530
+Codded by : Keathunsar : https://github.com/dady172172/Roblox-Cheats
+GUI Made by : https://v3rmillion.net/member.php?action=profile&uid=244024
+]]--
+---- vars ----
 kVars = {}
 kVars.WindowName = "Sizzling Simulator GUI"
 kVars.lp = game:GetService('Players').LocalPlayer
@@ -1079,7 +1085,7 @@ for i=1,5 do
 end
 
 kVars.boolPetDel = false
-sectionDelPets:Create("Toggle", "Delete By Name !*Carfull*!",function(bool)
+sectionDelPets:Create("Toggle", "Delete By Name !*Carful*!",function(bool)
     kVars.boolPetDel = bool
     if bool then
         fPetDel()
@@ -1182,7 +1188,6 @@ kVars.Locations = {
 	[12] = {name = "Area12 - WinterForest", cf = CFrame.new(-422, 5, 676)},
 	[13] = {name = "BossBattle", cf = CFrame.new(366, 5, 882)},
 	[14] = {name = "VIP", cf = CFrame.new(-151, 5, -180)}
-  [15] = {name = "Boston Mod Test", cf = CFrame.new(-151, 5, -180)}
 } 
 for i,v in pairs(kVars.Locations) do
     sectionLocations:Create("Button", v.name, function()
@@ -1364,3 +1369,130 @@ kVars.connectServerChatSpam = kVars.lp.PlayerGui.Chat.Frame.ChatChannelParentFra
     if kVars.boolServerChatSpam == false then
         wait(.1)
         local filterList = {"Hint:", "Like the game?"}
+        for i,v in pairs(game:GetService("Players").keathunsar.PlayerGui.Chat.Frame.ChatChannelParentFrame.Frame_MessageLogDisplay.Scroller:GetChildren()) do
+            if v.name == "Frame" and v:FindFirstChild("TextLabel") then
+                for b,g in pairs(filterList) do
+                    if v:FindFirstChild("TextLabel") and string.find(v.TextLabel.Text, g) then
+                        v:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end)
+
+sectionMisc:Create("Toggle", "Purchase Prompt",function(bool)
+    game:GetService("CoreGui").PurchasePrompt.Enabled = bool
+end,{default = game:GetService("CoreGui").PurchasePrompt.Enabled})
+
+kVars.Esp = {}
+kVars.boolEsp = false
+sectionMisc:Create("Toggle", "Player ESP",function(bool)
+    kVars.boolEsp = bool
+    if not bool then
+        for i,v in pairs(game.Players:GetPlayers()) do
+            if kVars.Esp[v] then
+                kVars.Esp[v].Drawing:Remove()
+            end
+        end
+        kVars.Esp = {}
+    else
+        fEsp()
+    end
+end,{default = kVars.boolEsp})
+
+kVars.plrRemovingConnect = game:GetService("Players").PlayerRemoving:Connect(function(player)
+    if kVars.Esp[player] then
+        kVars.Esp[player].Drawing:Remove()
+    end
+end)
+
+function fEsp()
+    spawn(function()
+        while kVars.boolEsp do
+            task.wait()
+            pcall(function()
+                for i,v in pairs(game.Players:GetPlayers()) do
+                    if kVars.boolEsp == false then break end
+                    if kVars.lp.name ~= v.name and kVars.boolEsp then
+                        if not kVars.Esp[v] then
+                            kVars.Esp[v] = {}
+                            kVars.Esp[v].Drawing = Drawing.new("Text")
+                            kVars.Esp[v].Drawing.Visible = false
+                            kVars.Esp[v].Drawing.Size = 16
+                            kVars.Esp[v].Drawing.Color = Color3.fromRGB(0, 255, 60)
+                            kVars.Esp[v].Drawing.Transparency = 1
+                            kVars.Esp[v].Drawing.ZIndex = 1
+                            kVars.Esp[v].Drawing.Center = true
+                            kVars.Esp[v].Drawing.Font = 3
+                            kVars.Esp[v].Drawing.Outline = true
+                            kVars.Esp[v].Drawing.OutlineColor = Color3.fromRGB(0,0,0)
+                            kVars.Esp[v].Drawing.Text = v.name
+                        end
+                        if v.Character:FindFirstChild("Head") then
+                            local vector, onScreen = game.Workspace.CurrentCamera:WorldToScreenPoint(game.Players[v.name].Character.Head.Position)
+                            if onScreen then
+                                kVars.Esp[v].Drawing.Visible = true
+                                kVars.Esp[v].Drawing.Position = Vector2.new(vector.x, vector.y)
+                            else
+                                kVars.Esp[v].Drawing.Visible = false
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end)
+end
+
+sectionMisc:Create("Button", "Delete All Pets In World *Only Graphical", function()
+    for i,v in pairs(game:GetService('Workspace'):GetChildren()) do
+        if v:FindFirstChild("PetId") then
+            v:Destroy()
+        end
+    end
+end,{animated = true})
+
+--========== page credits ==========----
+---- keaths ----
+sectionCreditsKeath:Create("Button", "https://github.com/dady172172/Roblox-Cheats", function()
+    setclipboard('https://github.com/dady172172/Roblox-Cheats')
+end,{animated = true})
+
+sectionCreditsKeath:Create("Button", "https://discord.gg/MhMB3c2CBn", function()
+    setclipboard('https://discord.gg/MhMB3c2CBn')
+end,{animated = true})
+
+---- alex ----
+sectionCreditsAlex:Create("Button", "https://teppyboy.github.io/", function()
+    setclipboard('https://teppyboy.github.io/Mirrors/Documentations/Zypher_UI/zypher.wtf/docs/main.html')
+end,{animated = true})
+
+----========== set window size after load ==========----
+game:GetService("CoreGui"):FindFirstChild(kVars.WindowName).Motherframe.Size = UDim2.new(0, 495, 0, 400)
+
+--========== delete script if re-injecting ==========----
+
+kVars.cR = game:GetService("CoreGui").ChildRemoved:Connect(function(child)
+    if child.name == kVars.WindowName then
+        for i,v in pairs(kVars) do
+            if type(v) == "boolean" then
+                kVars[i] = false
+            end
+        end
+        for i,v in pairs(game.Players:GetPlayers()) do
+            if kVars.Esp[v] then
+                kVars.Esp[v].Drawing:Remove()
+            end
+        end
+        kVars.Esp = {}
+        kVars.connectAntiAfk:Disconnect()
+        kVars.connectInputBegan:Disconnect()
+        kVars.connectJumpRequest:Disconnect()
+        kVars.plrRemovingConnect:Disconnect()
+        kVars.connectServerChatSpam:Disconnect()
+        kVars.cR:Disconnect()
+        wait(1)
+        script:Destroy()
+    end
+end)
