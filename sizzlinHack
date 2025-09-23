@@ -298,7 +298,7 @@ end,{default = kVars.boolUnlockAreas})
 function fUnlockAreas()
     spawn(function()
         while kVars.boolUnlockAreas do
-            wait(1)
+            wait(0.1)
             pcall(function()
                 local v1, v2 = kVars.rs.RemoteFunction:InvokeServer("Get Area Data")
                 local areaUnlock = {}
@@ -323,7 +323,7 @@ end,{default = kVars.boolUpgradeGrills})
 function fUpgradeGrills()
     spawn(function()
         while kVars.boolUpgradeGrills do
-            wait(1)
+            wait(0.1)
             pcall(function()
                 local grillNum = 0
                 for i,v in pairs(game:GetService("Workspace").DropOffMeat:getChildren()) do
@@ -410,7 +410,7 @@ end,{default = kVars.boolUpgradeWeapon})
 function fUpgradeWeapon()
     spawn(function()
         while kVars.boolUpgradeWeapon do
-            wait(1)
+            wait(0.1)
             pcall(function()
                 local pCoins, Gems = kVars.rs.RemoteFunction:InvokeServer("Get Currency");
 				local WeaponInv, curWeaponId = kVars.rs.RemoteFunction:InvokeServer("Get Weapon Data")
