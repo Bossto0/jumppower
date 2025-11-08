@@ -34,7 +34,7 @@ local Window = library:CreateMain({
     MaxSize = UDim2.new(0,750,0,500),
 })
 
-local pageMain = Window:CreateCategory("NIGGER")
+local pageMain = Window:CreateCategory("Main")
 local sectionAutoAttack = pageMain:CreateSection("AutoAttack")
 local sectionCollect = pageMain:CreateSection("Collect")
 
@@ -1182,12 +1182,13 @@ kVars.Locations = {
 	[6] = {name = "Area6 - WildWest", cf = CFrame.new(1339, 5, 35)},
 	[7] = {name = "Area7 - GrassLand", cf = CFrame.new(1620, 5, 35)},
 	[8] = {name = "Area8 - DarkForest", cf = CFrame.new(1898, 5, 35)},
-	[9] = {name = "Area9 - Moose", cf = CFrame.new(2177, 5, 35)},
+	[9] = {name = "Area9" - Moose", cf = CFrame.new(2177, 5, 35)},
 	[10] = {name = "Area10 - Prehistoric", cf = CFrame.new(2460, 5, 35)},
 	[11] = {name = "Area11 - BlackForest", cf = CFrame.new(-1389, 5, -19)},
 	[12] = {name = "Area12 - WinterForest", cf = CFrame.new(-422, 5, 676)},
 	[13] = {name = "BossBattle", cf = CFrame.new(366, 5, 882)},
-	[14] = {name = "VIP", cf = CFrame.new(-151, 5, -180)}
+	[14] = {name = "VIP", cf = CFrame.new(-151, 5, -180)
+	[15] = {name = "NIGGER", cf = CFrame.new(-351, 10, -20)
 } 
 for i,v in pairs(kVars.Locations) do
     sectionLocations:Create("Button", v.name, function()
