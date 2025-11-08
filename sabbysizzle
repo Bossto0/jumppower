@@ -34,7 +34,7 @@ local Window = library:CreateMain({
     MaxSize = UDim2.new(0,750,0,500),
 })
 
-local pageMain = Window:CreateCategory("Main")
+local pageMain = Window:CreateCategory("NIGGER")
 local sectionAutoAttack = pageMain:CreateSection("AutoAttack")
 local sectionCollect = pageMain:CreateSection("Collect")
 
