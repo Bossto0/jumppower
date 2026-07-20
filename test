@@ -1,84 +1,170 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
+local workspace = game:GetService("Workspace")
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-local speed = 16
-local minSpeed = 4
-local maxSpeed = 100
-local step = 4
+local DEBUG = true
 
-local humanoid
+local HIT_SCALE_MIN = 1.12
+local HIT_SCALE_MAX = 1.48
 
-local function applySpeed()
-	if humanoid then
-		humanoid.WalkSpeed = speed
-	end
+local firesignal = getgenv and getgenv().firesignal or (type(firesignal) == "function" and firesignal)
+local mousemoveabs = getgenv and getgenv().mousemoveabs or (type(mousemoveabs) == "function" and mousemoveabs)
+local mouse1click = getgenv and getgenv().mouse1click or (type(mouse1click) == "function" and mouse1click)
+
+local function log(...) if DEBUG then print("[Autoplay]", ...) end end
+
+local function findNotesFolderIn(container)
+    if not container then return nil end
+    for _, gui in ipairs(container:GetDescendants()) do
+        if gui:IsA("Folder") and gui.Name == "Folder" then
+            local parent = gui.Parent
+            if parent and parent:FindFirstChild("MissBar") and parent:FindFirstChild("Frame") then
+                return gui
+            end
+        end
+    end
+    for _, gui in ipairs(container:GetDescendants()) do
+        if gui:IsA("Folder") then
+            for _, child in ipairs(gui:GetChildren()) do
+                local img = child:FindFirstChild("ImageLabel")
+                if img and img:IsA("GuiObject") and img.Size.X.Scale >= 1 and img.Size.X.Scale <= 3.5 then
+                    return gui
+                end
+            end
+        end
+    end
+    return nil
 end
 
-local function setupCharacter(character)
-	humanoid = character:WaitForChild("Humanoid")
-	applySpeed()
+local function findNotesFolder()
+    local folder = findNotesFolderIn(PlayerGui)
+    if folder then return folder end
+    return nil
 end
 
-if player.Character then
-	setupCharacter(player.Character)
+local function getScreenCenter(guiObj)
+    local pos = guiObj.AbsolutePosition
+    local size = guiObj.AbsoluteSize
+    return Vector2.new(pos.X + size.X / 2, pos.Y + size.Y / 2)
 end
 
-player.CharacterAdded:Connect(setupCharacter)
-
-local gui = Instance.new("ScreenGui")
-gui.Name = "LocalSpeedGui"
-gui.ResetOnSpawn = false
-gui.Parent = playerGui
-
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 220, 0, 90)
-frame.Position = UDim2.new(0, 20, 0, 20)
-frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-frame.Parent = gui
-
-local label = Instance.new("TextLabel")
-label.Size = UDim2.new(1, 0, 0, 35)
-label.BackgroundTransparency = 1
-label.TextColor3 = Color3.fromRGB(255, 255, 255)
-label.TextScaled = true
-label.Font = Enum.Font.GothamBold
-label.Parent = frame
-
-local minus = Instance.new("TextButton")
-minus.Size = UDim2.new(0.5, -5, 0, 45)
-minus.Position = UDim2.new(0, 0, 0, 40)
-minus.Text = "-"
-minus.TextScaled = true
-minus.Font = Enum.Font.GothamBold
-minus.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
-minus.TextColor3 = Color3.fromRGB(255, 255, 255)
-minus.Parent = frame
-
-local plus = Instance.new("TextButton")
-plus.Size = UDim2.new(0.5, -5, 0, 45)
-plus.Position = UDim2.new(0.5, 5, 0, 40)
-plus.Text = "+"
-plus.TextScaled = true
-plus.Font = Enum.Font.GothamBold
-plus.BackgroundColor3 = Color3.fromRGB(60, 160, 80)
-plus.TextColor3 = Color3.fromRGB(255, 255, 255)
-plus.Parent = frame
-
-local function updateGui()
-	label.Text = "Speed: " .. speed
-	applySpeed()
+local function triggerNote(note)
+    if firesignal and note.Activated then
+        pcall(firesignal, note.Activated)
+        return true
+    end
+    local center = getScreenCenter(note)
+    if mousemoveabs and mouse1click then
+        pcall(mousemoveabs, center.X, center.Y)
+        pcall(mouse1click)
+        return true
+    end
+    local vim_ok, vim_svc = pcall(function() return game:GetService("VirtualInputManager") end)
+    if vim_ok and vim_svc then
+        pcall(function()
+            vim_svc:SendMouseButtonEvent(center.X, center.Y, 0, true)
+            task.wait()
+            vim_svc:SendMouseButtonEvent(center.X, center.Y, 0, false)
+        end)
+        return true
+    end
+    return false
 end
 
-minus.MouseButton1Click:Connect(function()
-	speed = math.max(minSpeed, speed - step)
-	updateGui()
-end)
+local clickedNotes = {}
 
-plus.MouseButton1Click:Connect(function()
-	speed = math.min(maxSpeed, speed + step)
-	updateGui()
-end)
+local function cleanupClicked()
+    for note, _ in pairs(clickedNotes) do
+        if not note.Parent or not note.Parent.Parent then
+            clickedNotes[note] = nil
+        end
+    end
+end
 
-updateGui()
+local function isGameActive()
+    local ddr = workspace:FindFirstChild("DDR")
+    if ddr and ddr:IsA("BoolValue") then return ddr.Value end
+    return false
+end
+
+local connection
+local lastLogTime = 0
+local folderNotFoundWarned = false
+
+local function startAutoplay()
+    if connection then connection:Disconnect(); connection = nil end
+
+    connection = RunService.Heartbeat:Connect(function()
+        local folder = findNotesFolder()
+        local ddr = workspace:FindFirstChild("DDR")
+        if ddr and ddr:IsA("BoolValue") and not ddr.Value then
+            cleanupClicked()
+            folderNotFoundWarned = false
+            return
+        end
+
+        if not folder then
+            if DEBUG and not folderNotFoundWarned and tick() - lastLogTime > 2 then
+                folderNotFoundWarned = true
+                lastLogTime = tick()
+                log("Game active but notes Folder not found. Is the DDR minigame visible?")
+            end
+            return
+        end
+        folderNotFoundWarned = false
+        cleanupClicked()
+
+        local notes = folder:GetChildren()
+        for _, note in ipairs(notes) do
+            if not clickedNotes[note] then
+                local img = note:FindFirstChild("ImageLabel")
+                if img and img:IsA("GuiObject") then
+                    local scale = img.Size.X.Scale
+                    if scale >= HIT_SCALE_MIN and scale <= HIT_SCALE_MAX then
+                        clickedNotes[note] = true
+                        if triggerNote(note) and DEBUG then
+                            log("Hit note, scale:", string.format("%.2f", scale))
+                        end
+                        break
+                    end
+                end
+            end
+        end
+    end)
+end
+
+local function watchGameState()
+    local ddr = workspace:FindFirstChild("DDR")
+    if not ddr or not ddr:IsA("BoolValue") then
+        log("workspace.DDR not found. Running anyway; will act when Folder with notes appears.")
+        startAutoplay()
+        return
+    end
+
+    startAutoplay()
+    ddr.Changed:Connect(function()
+        if ddr.Value then
+            table.clear(clickedNotes)
+            if not connection then startAutoplay() end
+            log("DDR started — autoplay active.")
+        else
+            if connection then connection:Disconnect(); connection = nil end
+            table.clear(clickedNotes)
+            log("DDR ended — autoplay stopped.")
+        end
+    end)
+end
+
+if firesignal then log("Using exploit firesignal for hits.") end
+if not firesignal and (mousemoveabs and mouse1click) then log("Using exploit mouse input for hits.") end
+if not firesignal and not (mousemoveabs and mouse1click) then log("Exploit input not found; trying VirtualInputManager.") end
+
+if isGameActive() then table.clear(clickedNotes); startAutoplay() end
+watchGameState()
+print("Osu autoplay loaded. Start a DDR round to autoplay. Set DEBUG = false to hide logs.")
